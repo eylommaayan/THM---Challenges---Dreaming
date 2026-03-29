@@ -118,4 +118,7 @@ Username: admin
 Password: password
 
 פעולה שבוצעה:
-הזנת האישורים בדף הלוגין אפשרה כניסה מוצלחת ללוח הבקרה (Admin Panel). כעת יש לנו שליטה מלאה על תכני האתר..
+הזנת האישורים בדף הלוגין אפשרה כניסה מוצלחת ללוח הבקרה (Admin Panel). כעת יש לנו שליטה מלאה על תכני האתר.
+
+<img width="989" height="715" alt="image" src="https://github.com/user-attachments/assets/ab776bff-34cb-46bc-ab88-e40cb4db8c4b" />
+
