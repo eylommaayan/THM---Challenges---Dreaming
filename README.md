@@ -42,7 +42,7 @@
 מה ביצעתי: הזנתי את הכתובת http://10.113.150.246/app/pluck-4.7.13/login.php והשתמשתי בסיסמה הנפוצה password.
 
 
-http://10.113.150.246/app/pluck-4.7.13/
+
 
 
 <img width="1133" height="836" alt="image" src="https://github.com/user-attachments/assets/e39b8184-57a4-4d04-8910-182aab67220e" />
