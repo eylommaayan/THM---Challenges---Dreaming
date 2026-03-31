@@ -14,10 +14,21 @@
 * **הסיבה:** רציתי להבין אילו "דלתות" פתוחות במכונה לפני שאני מתחיל לתקוף. זו נקודת המוצא של כל פרויקט.
 * **המטרה:** לזהות שירותים חשופים. גיליתי שרת Web (פורט 80) ושרת SSH (פורט 22).
 
+
+
+<img width="1204" height="771" alt="image" src="https://github.com/user-attachments/assets/59cfb507-0d24-4db1-a17e-c5209110f708" />
+
+
+
 ### סריקת ספריות עם Gobuster
-**הפקודה שביצעתי:** `gobuster dir -u http://<MACHINE_IP> -w /usr/share/wordlists/dirb/big.txt`
+**הפקודה שביצעתי:** `gobuster dir -u http://10.113.150.246 -w /usr/share/wordlists/dirb/big.txt`
 * **הסיבה:** דף הבית של Apache היה דף ברירת מחדל ריק. הנחתי שיש אפליקציה מותקנת בנתיב פנימי שלא פורסם.
 * **המטרה:** למצוא נקודת כניסה (Entry Point) לאתר. מצאתי את הספרייה `/app`.
+<img width="1189" height="867" alt="image" src="https://github.com/user-attachments/assets/d2b3c735-06d5-4250-8882-b8042480024a" />
+
+ניכנס לקובץ
+
+http://10.113.150.246/app/pluck-4.7.13/
 
 ---
 
