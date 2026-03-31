@@ -31,6 +31,7 @@
 http://10.113.150.246/app/pluck-4.7.13/
 
 ---
+<img width="1210" height="862" alt="image" src="https://github.com/user-attachments/assets/8c687ace-337b-493c-af1b-ee52cac12b9b" />
 
 ## 2. חדירה ראשונית (Initial Access)
 
