@@ -26,7 +26,22 @@
 * **המטרה:** למצוא נקודת כניסה (Entry Point) לאתר. מצאתי את הספרייה `/app`.
 <img width="1189" height="867" alt="image" src="https://github.com/user-attachments/assets/d2b3c735-06d5-4250-8882-b8042480024a" />
 
+זיהוי ממשק הניהול וכניסה (Authentication)
+
+הפעולה: ניגשתי לנתיב /app שמצאתי בשלב ה-Directory Brute-forcing (בעזרת GoBuster או סריקה ידנית). בתוך התיקייה זיהיתי את מערכת ה-Pluck.
+
+הסיבה: כדי לנצל חולשות בתוך מערכת ניהול תוכן (CMS), אני חייב קודם כל להגיע לדף הגישה של המנהל (Admin Login).
+
+המטרה: לבדוק אם קיימת גישה עם פרטי ברירת מחדל.
+
+מה ביצעתי: הזנתי את הכתובת http://10.113.150.246/app/pluck-4.7.13/login.php והשתמשתי בסיסמה הנפוצה password.
+
+התוצאה: הכניסה הצליחה, מה שאיפשר לי לגשת לפאנל הניהול שבו קיימת פגיעות ה-RCE
 ניכנס לקובץ
+
+
+<img width="697" height="579" alt="image" src="https://github.com/user-attachments/assets/23e73ca0-9880-416f-9fed-f70d3368d1ff" />
+
 
 http://10.113.150.246/app/pluck-4.7.13/
 
