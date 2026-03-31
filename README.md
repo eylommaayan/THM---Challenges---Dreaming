@@ -39,7 +39,8 @@ http://10.113.150.246/app/pluck-4.7.13/
 **הפעולה:** ניחשתי את סיסמת ברירת המחדל `password` והרצתי אקספלויט RCE
 
 <img width="1082" height="771" alt="image" src="https://github.com/user-attachments/assets/e726cbf3-859f-462c-a86c-8beee1979744" />
-<img width="1236" height="797" alt="image" src="https://github.com/user-attachments/assets/44eff222-ddb0-4784-8dbe-040b97d889b5" />
+<img width="1087" height="691" alt="image" src="https://github.com/user-attachments/assets/18e3f3e4-ea7b-4ab8-bf68-9069dc4347b7" />
+
 
 
 .
