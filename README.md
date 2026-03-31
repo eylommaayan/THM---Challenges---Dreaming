@@ -69,7 +69,12 @@ python3 exploit.py 10.113.150.246 80 password /app/pluck-4.7.13
 **הפעולה:** סרקתי את תיקיית `/opt` וקראתי את הקובץ `test.py`.
 * **הסיבה:** כמשתמש Web אין לי כמעט הרשאות. חיפשתי קבצים שנוצרו על ידי משתמשים אמיתיים במערכת, בתקווה למצוא סיסמאות שנשמרו בטעות.
 * **המטרה:** לבצע **Lateral Movement** (מעבר למשתמש חזק יותר). מצאתי את הסיסמה של **Lucien** והתחברתי ב-SSH.
+
+* <img width="1171" height="872" alt="image" src="https://github.com/user-attachments/assets/ffbcfd36-813d-4390-9999-711ef631a912" />
+<img width="865" height="663" alt="image" src="https://github.com/user-attachments/assets/036e3a44-49fc-4c45-a255-0bbffc84db78" />
+
 * **התוצאה:** השגתי את הדגל הראשון.
+<img width="1220" height="871" alt="image" src="https://github.com/user-attachments/assets/159f0f24-9947-457e-9cb0-aec2bb838d0a" />
 
 ---
 
