@@ -48,12 +48,22 @@ http://10.113.150.246/app/pluck-4.7.13/
 מה אני עושה בשלב זה? אני משתמש בסקריפט exploit.py כדי להעלות קובץ PHP זדוני לשרת.
 
 הפקודה שביצעתי: ```bash
-python3 exploit.py <MACHINE_IP> 80 password /app/pluck-4.7.13
+python3 exploit.py 10.113.150.246 80 password /app/pluck-4.7.13
 
 הסיבה: זיהיתי שהאתר מריץ Pluck 4.7.13. גרסה זו מאפשרת למנהל מערכת להעלות קבצים. בעזרת ה-RCE, אני "מרמה" את השרת כך שיריץ את הקובץ שלי במקום רק לאחסן אותו.
 
 המטרה: להשיג Webshell. זהו הצעד שמאפשר לי להריץ פקודות כמו ls או whoami דרך הדפדפן, ובכך אני הופך למשתמש www-data על השרת..
 * **המטרה:** להשיג Shell (גישה למערכת) דרך פגיעות בהעלאת קבצים. הצלחתי לקבל גישה כמשתמש `www-data`.
+
+
+הכנת האקספלויט: ניסיתי להריץ את הסקריפט וגיליתי שהוא חסר. השתמשתי ב-wget כדי להוריד את האקספלויט המתאים לגרסת ה-Pluck CMS מהמאגר של Exploit-DB.
+<img width="836" height="120" alt="image" src="https://github.com/user-attachments/assets/dc1546a3-5271-4092-be1a-f6493eb47179" />
+
+<img width="996" height="317" alt="image" src="https://github.com/user-attachments/assets/b7fbc386-93b4-4f45-92c1-0db84e47ff9e" />
+
+
+
+
 
 ### מציאת פרטי המשתמש Lucien
 **הפעולה:** סרקתי את תיקיית `/opt` וקראתי את הקובץ `test.py`.
