@@ -49,6 +49,7 @@
 
 התוצאה: הכניסה הצליחה, מה שאיפשר לי לגשת לפאנל הניהול שבו קיימת פגיעות ה-RCE
 ניכנס לקובץ
+<img width="1209" height="872" alt="image" src="https://github.com/user-attachments/assets/21f9d847-5705-429d-a69a-6d5b2acd36ea" />
 
 
 ## 2. חדירה ראשונית (Initial Access)
