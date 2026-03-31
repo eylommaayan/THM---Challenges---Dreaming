@@ -66,6 +66,10 @@ Bash
 python3 exploit.py 10.113.150.246 80 password /app/pluck-4.7.13
 התוצאה: קיבלתי שגיאת No such file or directory.
 
+
+<img width="1042" height="867" alt="image" src="https://github.com/user-attachments/assets/586cde3b-7db1-4354-9bb3-5a470463ebee" />
+
+
 הסיבה: הקובץ exploit.py לא היה קיים פיזית בתיקייה שבה עבדתי בתוך ה-AttackBox.
 
 שלב 2.2: הורדת ה"נשק" (Exploit Download)
@@ -73,31 +77,15 @@ python3 exploit.py 10.113.150.246 80 password /app/pluck-4.7.13
 
 הפקודה שביצעתי:
 
-Bash
+
 wget https://www.exploit-db.com/download/49909 -O exploit.py
+
+<img width="1223" height="844" alt="image" src="https://github.com/user-attachments/assets/5b2df7ba-83ad-4c26-8c8d-e580ac008e28" />
+
 הסיבה: אי אפשר להריץ קוד שלא נמצא על הדיסק. השתמשתי ב-wget כדי למשוך את הקוד מ-Exploit-DB (מאגר האקספלויטים).
 
 המטרה: להכין את הסקריפט שיבצע את ה-RCE (הרצת קוד מרחוק).
-
-
-<img width="836" height="120" alt="image" src="https://github.com/user-attachments/assets/dc1546a3-5271-4092-be1a-f6493eb47179" />
-
-הפקודה שאתה צריך כדי להוריד את הקובץ למכונה שלך היא wget.
-
-השגיאה שקיבלת אומרת שהקובץ פשוט לא קיים בתיקייה שאתה נמצא בה, ולכן אי אפשר להריץ אותו עם פייתון.
-
-🛠️ הפקודה להורדה:
-העתק והדבק את השורה הזו לטרמינל שלך:
-
-Bash
-wget https://www.exploit-db.com/download/49909 -O exploit.py
-🔍 מה הפקודה הזו עושה? (למדריך ה-PT שלך)
-wget: כלי להורדת קבצים מהאינטרנט דרך הטרמינל.
-
-הכתובת: הקישור הישיר לקוד של האקספלויט (CVE-2020-29607) ממאגר Exploit-DB.
-
--O exploit.py: אומר למערכת: "תשמרי את הקובץ שירד בשם exploit.py" (כדי שיהיה לך קל להריץ אותו אחר כך).
-
+.
 
 
 <img width="996" height="317" alt="image" src="https://github.com/user-attachments/assets/b7fbc386-93b4-4f45-92c1-0db84e47ff9e" />
