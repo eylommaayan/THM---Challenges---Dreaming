@@ -206,6 +206,15 @@ cat user.txt
 אימות המיקום (pwd):
 בטרמינל בדפדפן הרצתי את הפקודה pwd (ראשי תיבות של Print Working Directory)
 
+<img width="740" height="757" alt="image" src="https://github.com/user-attachments/assets/e2745d3e-198f-45e4-b76c-a8a9aaf6c766" />
+
+<img width="793" height="797" alt="image" src="https://github.com/user-attachments/assets/aec6eaeb-6b55-4c11-890b-2dbd66937343" />
+
+<img width="1564" height="842" alt="image" src="https://github.com/user-attachments/assets/4177d7ef-8fc0-4cc1-8362-234a627ca90c" />
+
+
+
+
 <img width="802" height="662" alt="image" src="https://github.com/user-attachments/assets/48e62a1f-cf0a-4b1b-a156-3548c163c99c" />
 .
 
