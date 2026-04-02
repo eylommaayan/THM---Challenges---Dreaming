@@ -234,6 +234,7 @@ cat user.txt
 
 ניתוח הרשאותSudo
 הפעולה שביצעתי: sudo -l
+<img width="1131" height="320" alt="image" src="https://github.com/user-attachments/assets/a318c230-d57b-442f-9dea-a524d3f57d26" />
 
 הסיבה: חיפשתי דרך להפוך למשתמש חזק יותר או ל-Root.
 
