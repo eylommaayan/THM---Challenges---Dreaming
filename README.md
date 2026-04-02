@@ -63,7 +63,7 @@
 הפקודה שביצעתי:
 
 Bash
-python3 exploit.py 10.113.150.246 80 password /app/pluck-4.7.13
+python3 exploit.py 10.113.153.19 80 password /app/pluck-4.7.13
 התוצאה: קיבלתי שגיאת No such file or directory.
 
 
