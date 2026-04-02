@@ -211,7 +211,8 @@ cat user.txt
 
 <img width="793" height="797" alt="image" src="https://github.com/user-attachments/assets/aec6eaeb-6b55-4c11-890b-2dbd66937343" />
 
-<img width="1564" height="842" alt="image" src="https://github.com/user-attachments/assets/4177d7ef-8fc0-4cc1-8362-234a627ca90c" />
+<img width="909" height="863" alt="image" src="https://github.com/user-attachments/assets/93a4914c-989b-4a5f-9e09-63f3fff23c2e" />
+
 
 
 שלב 3.2: חילוץ דגל המשתמש (Exfiltration)
