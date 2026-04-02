@@ -382,14 +382,57 @@ sudo -u death /usr/bin/python3 /home/death/getDreams.py
 
 🛡️ שלב 5: העלאת הרשאות למשתמש Morpheus (Root)
 
-🛡️ שלב 5.1: חילוץ סיסמת המשתמש (Hardcoded Credentials Extraction)
+🛡️
+
+🛡️ שלב 5.1: חילוץ סיסמת Death (Credential Harvesting)
 הפעולה שביצעתי:
-קריאת תוכן הקובץ /home/death/getDreams.py (באמצעות הזרקת הפקודה cat שביצענו קודם ב-MySQL).
+מכיוון שלא יכולתי לקרוא את הקובץ ישירות, השתמשתי ב-Command Injection שביצענו קודם דרך ה-MySQL כדי להדפיס את תוכן הסקריפט:
 
-הסיבה: סקריפטים שמתחברים למסדי נתונים דורשים לעיתים קרובות פרטי הזדהות. במערכות שאינן מוגדרות היטב, מפתחים נוטים "להטמיע" (Hardcode) את הסיסמה ישירות בתוך הקוד במקום להשתמש בכספת סודות או במשתני סביבה.
+Bash
+sudo -u death /usr/bin/python3 /home/death/getDreams.py
+(לאחר שהזרקתי ל-DB את הפקודה: '; cat /home/death/getDreams.py; #)
 
-המטרה: להשיג את הסיסמה האישית של המשתמש Death. בעוד שהיה לי אישור sudo להריץ את הסקריפט, השגת הסיסמה מאפשרת לי "תנועה רוחבית" (Lateral Movement) מלאה – כלומר, להפוך למשתמש Death עצמו ב-Shell אינטראקטיבי.
+הסיבה: בתוך הקוד של getDreams.py מופיעה סיסמת ה-MySQL של המשתמש death. במכונות מהסוג הזה, משתמשים נוטים למחזר סיסמאות (Password Reuse).
 
-הממצא: זיהיתי את המשתנה DB_PASS המכיל את הסיסמה: !mementoMORI666!.
+המטרה: להשיג את הסיסמה האישית של Death כדי לבצע su death ולעבור למשתמש הבא בסולם ההרשאות.
+
+הממצא: הסיסמה שנחשפה היא: !mementoMORI666!.
+
+🛡️ שלב 5.2: מעבר למשתמש Death (Horizontal Movement)
+הפעולה שביצעתי:
+
+Bash
+su death
+(הזנת הסיסמה: !mementoMORI666!)
+
+הסיבה: כדי לחקור קבצים ששייכים ל-Morpheus, אני צריך זהות חזקה יותר במערכת.
+
+התוצאה: הצלחתי להחליף משתמש. כעת אני פועל תחת הזהות של death, מה שנותן לי גישה לתיקיית הבית שלו ולחיפוש קבצים מתקדם יותר
 
 
+
+3. תנועה רוחבית (Lateral Movement)
+חילוץ פרטי גישה (Credential Harvesting): מתוך הרצת הסקריפט והזרקת פקודות ב-MySQL, חולצה סיסמת המשתמש death: !mementoMORI666!.
+
+מעבר משתמש: התבצע שימוש בפקודת su death כדי לקבל Shell אינטראקטיבי מלא תחת המשתמש החדש.
+
+4. העלאת הרשאות (Privilege Escalation) - Morpheus
+א. סריקת נכסים (Enumeration)
+בוצעה פקודת חיפוש לאיתור קבצים השייכים לקבוצת morpheus:
+find / -type f -group morpheus 2>/dev/null
+הממצא העיקרי: זוהה קובץ ספריית המערכת של פייתון /usr/lib/python3.8/shutil.py עם הרשאות כתיבה לקבוצת death.
+
+ב. ניצול פגיעות (Exploitation - Library Hijacking)
+הווקטור: זיהוי שהסקריפט /home/morpheus/restore.py מבצע import shutil.
+
+הפעולה: הזרקת קוד זדוני לסוף קובץ ה-shutil.py המאפשר גישה לקבצים מוגנים.
+
+הזרקה (לפי המדריך):
+echo 'os.system("chmod 777 /home/morpheus/morpheus_flag.txt")' >> /usr/lib/python3.8/shutil.py
+
+חלופה (Root): הזרקת פקודה לשינוי הרשאות ה-Bash ל-SUID (chmod +s /bin/bash).
+
+5. תוצאות (Results)
+לאחר הזרקת הקוד והמתנה להרצת ה-Cron Job של המשתמש Morpheus, ההרשאות על קובץ הדגל (או ה-Bash) השתנו.
+
+השגת היעד: קריאת תוכן הדגל בנתיב /home/morpheus/morpheus_flag.txt..
