@@ -136,7 +136,8 @@ Bash
 cat /opt/test.py
 מה גיליתי: הסקריפט הכיל קוד פייתון שנועד לבדוק התחברות למערכת ה-Pluck. בתוך הקוד הופיעה הסיסמה של המשתמש Lucien בטקסט גלוי (Cleartext).
 
-הסיסמה שנחשפה: HeyLucien#@1999!
+הסיסמה שנחשפה: 
+HeyLucien#@1999!
 
 <img width="1141" height="893" alt="image" src="https://github.com/user-attachments/assets/8bc4cd9d-071a-48c0-a9a5-0ba1afb4bf55" />
 
@@ -373,3 +374,15 @@ sudo -u death /usr/bin/python3 /home/death/getDreams.py
 
 <img width="764" height="203" alt="image" src="https://github.com/user-attachments/assets/bf5650f2-cd18-4c83-aef4-1492d6f71584" />
 .
+
+
+🛡️ שלב 5: העלאת הרשאות למשתמש Morpheus (Root)
+5.1 חילוץ פרטי גישה למשתמש Death (Credential Extraction)
+הפעולה שביצעתי:
+קריאה חוזרת של הסקריפט /home/death/getDreams.py (או שימוש בסיסמה שנמצאה ב-Webshell המקורי ב-/opt).
+
+הסיבה: כדי להתקדם במערכת הקבצים בצורה יסודית, אני צריך לעבור ממשתמש "אורח" (Lucien) למשתמש "מקומי" חזק יותר (Death).
+
+המטרה: השגת הסיסמה של Death כדי לבצע su death.
+
+התוצאה: שימוש בסיסמה שנחשפה בסקריפט (בגרסה הלא מצונזרת) כדי לעבור למשתמש Death בטרמינל.
