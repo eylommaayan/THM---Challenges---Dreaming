@@ -1,4 +1,4 @@
-
+<img width="814" height="255" alt="image" src="https://github.com/user-attachments/assets/f4762b1d-8fae-4b1f-ba0f-e5af51771899" />
 
 # 💤 Dreaming - TryHackMe Writeup (Personal Walkthrough)
 
@@ -291,3 +291,85 @@ select * from dreams;
 המטרה: לוודא את שמות העמודות (במקרה זה dreamer ו-dream) כדי לבנות פקודת INSERT תקינה מבחינה תחבירית. הבנת המבנה חיונית כדי שהסקריפט שואב הנתונים לא ייכשל בשל שגיאת SQL, אלא ימשיך להרצת פקודת ה-Shell המוזרקת.
 
 התוצאה: זיהוי הפורמט שבו הנתונים נשמרים, מה שמאפשר לי להכין את ה"מטען" (Payload) המדויק להזרקה בשלב הבא.
+
+
+🛡️ שלב 4.5: הזרקת המטען (Command Injection Payload)
+הפעולה שביצעתי:
+
+SQL
+INSERT INTO dreams (dreamer, dream) VALUES ("'flag'", "''; cat ~/death_flag.txt; # ");
+הסיבה: זיהיתי שסקריפט ה-Python משתמש ב-shell=True בתוך פונקציית subprocess.check_output. זהו כשל אבטחה חמור המאפשר לי להריץ פקודות Shell על ידי הוספת תווים מפרידים (כמו ;).
+
+המטרה: להחדיר "מטען זדוני" (Payload) לתוך מסד הנתונים. המטען בנוי כך שהוא יסגור את פקודת ה-echo המקורית של הסקריפט ויריץ מיד אחריה פקודת cat לקריאת קובץ הדגל המוגן. ה-# בסוף משמש כהערה כדי למנוע שגיאות תחביריות משאר חלקי הפקודה המקורית.
+🛡️ שלב 4.6: ניסיון הרצה ראשוני וזיהוי חסמים (Initial Attempt & Troubleshooting)
+הפעולה שביצעתי:
+
+Bash
+sudo -u death /opt/scripts/getDreams.py
+
+
+<img width="814" height="255" alt="image" src="https://github.com/user-attachments/assets/3053a585-5f91-4a42-89f1-ef40f639122d" />
+גם password ניסתי וגם  HeyLucien#@1999!
+  נדחו
+
+הסיבה: לאחר שהבנתי מהסקריפט ב-/opt כיצד המערכת עובדת, ניסיתי להריץ אותו עם הרשאות של המשתמש death
+.
+
+המכשול: המערכת ביקשה סיסמה עבור lucien ולאחר מכן החזירה שגיאת command not found.
+
+התובנה: 1. ה-Sudo נדחה כי ניסיתי להריץ נתיב (/opt/scripts/) שלא הוגדר ב-Sudoers (שם הוגדר רק /home/death/).
+2. הבנתי שחסרים לי פרטי גישה למסד הנתונים כדי לבצע את ההזרקה, וניסיון התחברות עם סיסמת המשתמש הרגילה נכשל (Access denied).
+
+🛡️ שלב 4.7: חקירת היסטוריית פקודות וחילוץ פרטי גישה (Credential Hunting)
+הפעולה שביצעתי:
+
+Bash
+cat ~/.bash_history
+הסיבה: בגלל הכישלון בהתחברות ל-MySQL עם הסיסמה המוכרת לי, חיפשתי עקבות של פעולות קודמות שביצע המשתמש Lucien במערכת.
+
+המטרה: למצוא את הסיסמה הספציפית למסד הנתונים. הנחתי שמנהל המערכת או המשתמש התחברו ידנית בעבר והשאירו את הסיסמה גלויה בהיסטוריית ה-Bash.
+
+התוצאה: מצאתי את השורה הקריטית: mysql -u lucien -plucien42DBPASSWORD.
+
+הממצא: זיהיתי את הסיסמה למסד הנתונים: lucien42DBPASSWORD
+
+<img width="741" height="468" alt="image" src="https://github.com/user-attachments/assets/3099ee29-d84f-4ada-aae3-a461281e0737" />
+.
+
+🛡️ שלב 4.8: השגת גישה למסד הנתונים ומיפוי (Database Access)
+הפעולה שביצעתי:
+
+Bash
+mysql -u lucien -plucien42DBPASSWORD
+show databases;
+use library;
+show tables;
+
+<img width="763" height="549" alt="image" src="https://github.com/user-attachments/assets/0d313af7-fd23-45d9-beea-4333b3f3db70" />
+
+
+<img width="868" height="739" alt="image" src="https://github.com/user-attachments/assets/d32eece0-2e13-4056-a4d4-9711d809e17c" />
+
+הסיבה: שימוש בסיסמה שנמצאה ב-History כדי להיכנס לתוך ה-MySQL ולבצע את ה-Enumeration (חקירה) הפנימי.
+
+המטרה: לאתר את הטבלה שבה הסקריפט משתמש כדי להזריק לתוכה את ה"מטען" (Payload).
+
+התוצאה: אישרתי שהמסד הנכון הוא library והטבלה היא dreams
+
+
+🛡️ שלב 4.9: חילוץ דגל Death (Exfiltration)
+הפעולה שביצעתי:
+
+Bash
+exit;
+sudo -u death /usr/bin/python3 /home/death/getDreams.py
+הסיבה: לאחר ש"הרעלתי" את מסד הנתונים בשלב הקודם, הייתי חייב לחזור למעטפת המערכת (System Shell) כדי להפעיל את הסקריפט הפגיע. כיוון שלמשתמש Lucien יש הרשאות sudo להריץ את הסקריפט כמשתמש death, הפקודות המוזרקות שלי רצו תחת ההרשאות הגבוהות של בעל הסקריפט.
+
+המטרה: לגרום למנוע ה-Shell של לינוקס לפרש את הנתון מה-DB כפקודה פעילה.
+
+התוצאה: הסקריפט משך את השורה שהזרקתי (flag), סגר את פקודת ה-echo המקורית באמצעות ה-; שהוספתי, והריץ את הפקודה cat ~/death_flag.txt.
+
+הממצא: השגתי את הדגל השני: THM{1M_TH3R3_4_TH3M}.
+
+<img width="764" height="203" alt="image" src="https://github.com/user-attachments/assets/bf5650f2-cd18-4c83-aef4-1492d6f71584" />
+.
