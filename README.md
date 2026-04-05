@@ -401,147 +401,58 @@ select * from dreams;
 התוצאה: זיהוי הפורמט שבו הנתונים נשמרים, מה שמאפשר לי להכין את ה"מטען" (Payload) המדויק להזרקה בשלב הבא.
 
 
-🛡️ שלב 4.5: הזרקת המטען (Command Injection Payload)
-הפעולה שביצעתי:
+<img width="889" height="795" alt="image" src="https://github.com/user-attachments/assets/89284801-859c-4dd7-b23e-ccff7b2bc8df" />
+:
 
-SQL
-INSERT INTO dreams (dreamer, dream) VALUES ("'flag'", "''; cat ~/death_flag.txt; # ");
-הסיבה: זיהיתי שסקריפט ה-Python משתמש ב-shell=True בתוך פונקציית subprocess.check_output. זהו כשל אבטחה חמור המאפשר לי להריץ פקודות Shell על ידי הוספת תווים מפרידים (כמו ;).
+---
 
-המטרה: להחדיר "מטען זדוני" (Payload) לתוך מסד הנתונים. המטען בנוי כך שהוא יסגור את פקודת ה-echo המקורית של הסקריפט ויריץ מיד אחריה פקודת cat לקריאת קובץ הדגל המוגן. ה-# בסוף משמש כהערה כדי למנוע שגיאות תחביריות משאר חלקי הפקודה המקורית.
-🛡️ שלב 4.6: ניסיון הרצה ראשוני וזיהוי חסמים (Initial Attempt & Troubleshooting)
-הפעולה שביצעתי:
+### 🛠️ שלב 4.5: שלב ה"הזרקה" למסד הנתונים (MySQL)
+בשלב הזה, המטרה שלי הייתה להחדיר את המטען הזדוני לתוך המערכת. נכנסתי ל-MySQL והרצתי את הפקודה הבאה:
 
-Bash
-sudo -u death /opt/scripts/getDreams.py
+`INSERT INTO dreams (dreamer, dream) VALUES ('hacker', '; cat /home/death/death_flag.txt; #');`
 
 
-<img width="814" height="255" alt="image" src="https://github.com/user-attachments/assets/3053a585-5f91-4a42-89f1-ef40f639122d" />
-גם password ניסתי וגם  HeyLucien#@1999!
-  נדחו
 
-הסיבה: לאחר שהבנתי מהסקריפט ב-/opt כיצד המערכת עובדת, ניסיתי להריץ אותו עם הרשאות של המשתמש death
-.
+* **מה עשיתי כאן?** השתמשתי בגרש בודד לפני ה-`;` כדי **לפתוח** את מחרוזת הטקסט עבור MySQL.
+* **איך סגרתי?** השתמשתי בגרש בודד אחרי הסולמית (`#`) כדי **לסגור** את המחרוזת בצורה תקינה.
+* **התוצאה:** מבחינת MySQL הכל עבר "חלק". הוא פשוט שמר בתוך הטבלה את הטקסט: `; cat /home/death/death_flag.txt; #`. מבחינתו זה סתם חלום מוזר.
 
-המכשול: המערכת ביקשה סיסמה עבור lucien ולאחר מכן החזירה שגיאת command not found.
+---
 
-התובנה: 1. ה-Sudo נדחה כי ניסיתי להריץ נתיב (/opt/scripts/) שלא הוגדר ב-Sudoers (שם הוגדר רק /home/death/).
-2. הבנתי שחסרים לי פרטי גישה למסד הנתונים כדי לבצע את ההזרקה, וניסיון התחברות עם סיסמת המשתמש הרגילה נכשל (Access denied).
+### 🚀 שלב 4.6: שלב ה"הפעלה" (Linux Shell)
+עכשיו עברתי לטרמינל והרצתי את סקריפט הפייתון עם הרשאות `sudo`. הסקריפט משך את הטקסט ששתלתי והציב אותו בתוך פקודת `echo`. בגלל השימוש ב-`shell=True`, הלינוקס "ראה" את השורה הבאה:
 
-🛡️ שלב 4.7: חקירת היסטוריית פקודות וחילוץ פרטי גישה (Credential Hunting)
-הפעולה שביצעתי:
-
-Bash
-cat ~/.bash_history
-הסיבה: בגלל הכישלון בהתחברות ל-MySQL עם הסיסמה המוכרת לי, חיפשתי עקבות של פעולות קודמות שביצע המשתמש Lucien במערכת.
-
-המטרה: למצוא את הסיסמה הספציפית למסד הנתונים. הנחתי שמנהל המערכת או המשתמש התחברו ידנית בעבר והשאירו את הסיסמה גלויה בהיסטוריית ה-Bash.
-
-התוצאה: מצאתי את השורה הקריטית: mysql -u lucien -plucien42DBPASSWORD.
-
-הממצא: זיהיתי את הסיסמה למסד הנתונים: lucien42DBPASSWORD
-
-<img width="741" height="468" alt="image" src="https://github.com/user-attachments/assets/3099ee29-d84f-4ada-aae3-a461281e0737" />
-.
-
-🛡️ שלב 4.8: השגת גישה למסד הנתונים ומיפוי (Database Access)
-הפעולה שביצעתי:
-
-Bash
-mysql -u lucien -plucien42DBPASSWORD
-show databases;
-use library;
-show tables;
-
-<img width="763" height="549" alt="image" src="https://github.com/user-attachments/assets/0d313af7-fd23-45d9-beea-4333b3f3db70" />
+`echo "Dream: ; cat /home/death/death_flag.txt; #"`
 
 
-<img width="868" height="739" alt="image" src="https://github.com/user-attachments/assets/d32eece0-2e13-4056-a4d4-9711d809e17c" />
 
-הסיבה: שימוש בסיסמה שנמצאה ב-History כדי להיכנס לתוך ה-MySQL ולבצע את ה-Enumeration (חקירה) הפנימי.
+**כך המערכת הריצה את הפקודה שלי צעד אחר צעד:**
+1.  **הפקודה הראשונה:** השרת הריץ `echo "Dream: `. הפקודה הזו נעצרה מיד כשפגשה בנקודה-פסיק (`;`).
+2.  **הפריצה:** הלינוקס זיהה את ה-`;` כסימן לסיום פקודה, ועבר מיד לפקודה הבאה שכתבתי: `cat /home/death/death_flag.txt`.
+3.  **ההסוואה:** אחרי שהפקודה שלי רצה, הלינוקס ראה שוב `;` ואז סולמית (`#`). הסולמית אמרה לו: "כל מה שכתוב מכאן ועד סוף השורה הוא הערה, תתעלם ממנו".
 
-המטרה: לאתר את הטבלה שבה הסקריפט משתמש כדי להזריק לתוכה את ה"מטען" (Payload).
+---
 
-התוצאה: אישרתי שהמסד הנכון הוא library והטבלה היא dreams
+### 💡 למה ה-' האחרון לא הרס לי את הפריצה?
+זה החלק המתוחכם. הגרש שסגרתי ב-MySQL הופיע בלינוקס **אחרי** הסולמית. לכן, ה-Shell של לינוקס פשוט התעלם ממנו ולא זרק לי שגיאת גרשיים.
 
+**הסיכום שלי:**
+* השתמשתי בגרשיים כ**מסגרת** כדי ש-MySQL יסכים לשמור את הנתונים.
+* השתמשתי ב-`;` וב-`#` כ**כלי עבודה** כדי לשבור את הלינוקס ולהריץ את הפקודה שגונבת את הדגל.
 
-🛡️ שלב 4.9: חילוץ דגל Death (Exfiltration)
-הפעולה שביצעתי:
+בלי הגרש האחרון, לא הייתי מצליח לשמור את הפקודה ב-DB. בלי הסולמית, הלינוקס היה "נתקע" על הגרש המיותר ונותן שגיאה. השילוב הזה הוא שאיפשר לי להשיג את דגל ה-Death.
 
-Bash
-exit;
-sudo -u death /usr/bin/python3 /home/death/getDreams.py
-הסיבה: לאחר ש"הרעלתי" את מסד הנתונים בשלב הקודם, הייתי חייב לחזור למעטפת המערכת (System Shell) כדי להפעיל את הסקריפט הפגיע. כיוון שלמשתמש Lucien יש הרשאות sudo להריץ את הסקריפט כמשתמש death, הפקודות המוזרקות שלי רצו תחת ההרשאות הגבוהות של בעל הסקריפט.
-
-המטרה: לגרום למנוע ה-Shell של לינוקס לפרש את הנתון מה-DB כפקודה פעילה.
-
-התוצאה: הסקריפט משך את השורה שהזרקתי (flag), סגר את פקודת ה-echo המקורית באמצעות ה-; שהוספתי, והריץ את הפקודה cat ~/death_flag.txt.
-
-הממצא: השגתי את הדגל השני: THM{1M_TH3R3_4_TH3M}.
-
-<img width="764" height="203" alt="image" src="https://github.com/user-attachments/assets/bf5650f2-cd18-4c83-aef4-1492d6f71584" />
-.
+NSERT INTO dreams (dreamer, dream) VALUES ('hacker', '; cat /home/death/death_flag.txt; #');
 
 
 
 
 
-🛡️ שלב 5: העלאת הרשאות למשתמש Morpheus (Root)
-
-🛡️
-
-🛡️ שלב 5.1: חילוץ סיסמת Death (Credential Harvesting)
-הפעולה שביצעתי:
-מכיוון שלא יכולתי לקרוא את הקובץ ישירות, השתמשתי ב-Command Injection שביצענו קודם דרך ה-MySQL כדי להדפיס את תוכן הסקריפט:
-
-Bash
-sudo -u death /usr/bin/python3 /home/death/getDreams.py
-(לאחר שהזרקתי ל-DB את הפקודה: '; cat /home/death/getDreams.py; #)
-
-הסיבה: בתוך הקוד של getDreams.py מופיעה סיסמת ה-MySQL של המשתמש death. במכונות מהסוג הזה, משתמשים נוטים למחזר סיסמאות (Password Reuse).
-
-המטרה: להשיג את הסיסמה האישית של Death כדי לבצע su death ולעבור למשתמש הבא בסולם ההרשאות.
-
-הממצא: הסיסמה שנחשפה היא: !mementoMORI666!.
-
-🛡️ שלב 5.2: מעבר למשתמש Death (Horizontal Movement)
-הפעולה שביצעתי:
-
-Bash
-su death
-(הזנת הסיסמה: !mementoMORI666!)
-
-הסיבה: כדי לחקור קבצים ששייכים ל-Morpheus, אני צריך זהות חזקה יותר במערכת.
-
-התוצאה: הצלחתי להחליף משתמש. כעת אני פועל תחת הזהות של death, מה שנותן לי גישה לתיקיית הבית שלו ולחיפוש קבצים מתקדם יותר
 
 
 
-3. תנועה רוחבית (Lateral Movement)
-חילוץ פרטי גישה (Credential Harvesting): מתוך הרצת הסקריפט והזרקת פקודות ב-MySQL, חולצה סיסמת המשתמש death: !mementoMORI666!.
 
-מעבר משתמש: התבצע שימוש בפקודת su death כדי לקבל Shell אינטראקטיבי מלא תחת המשתמש החדש.
 
-4. העלאת הרשאות (Privilege Escalation) - Morpheus
-א. סריקת נכסים (Enumeration)
-בוצעה פקודת חיפוש לאיתור קבצים השייכים לקבוצת morpheus:
-find / -type f -group morpheus 2>/dev/null
-הממצא העיקרי: זוהה קובץ ספריית המערכת של פייתון /usr/lib/python3.8/shutil.py עם הרשאות כתיבה לקבוצת death.
-
-ב. ניצול פגיעות (Exploitation - Library Hijacking)
-הווקטור: זיהוי שהסקריפט /home/morpheus/restore.py מבצע import shutil.
-
-הפעולה: הזרקת קוד זדוני לסוף קובץ ה-shutil.py המאפשר גישה לקבצים מוגנים.
-
-הזרקה (לפי המדריך):
-echo 'os.system("chmod 777 /home/morpheus/morpheus_flag.txt")' >> /usr/lib/python3.8/shutil.py
-
-חלופה (Root): הזרקת פקודה לשינוי הרשאות ה-Bash ל-SUID (chmod +s /bin/bash).
-
-5. תוצאות (Results)
-לאחר הזרקת הקוד והמתנה להרצת ה-Cron Job של המשתמש Morpheus, ההרשאות על קובץ הדגל (או ה-Bash) השתנו.
-
-השגת היעד: קריאת תוכן הדגל בנתיב /home/morpheus/morpheus_flag.txt.
 
 
 
