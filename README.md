@@ -385,6 +385,14 @@ mysql -u lucien -plucien42DBPASSWORD
 המטרה: למצוא היכן נשמר המידע על ה"חלומות". גיליתי שקיימת טבלה אחת בלבד בשם dreams.
 <img width="665" height="438" alt="image" src="https://github.com/user-attachments/assets/ee803174-b686-4804-87a4-ff8ad0488162" />
 
+נבדוק גם בטרימנל ברשת מה מכיל הקובץ getDreams.py
+ואנחנו רואים ששם הסיפרייה הוא library
+
+<img width="1423" height="839" alt="image" src="https://github.com/user-attachments/assets/6b22e890-ef3c-4848-b354-e5a580517d1d" />
+
+
+
+
 
 🛡️ שלב 4.4: אימות מבנה הטבלה (Table Data Enumeration)
 הפעולה שביצעתי:
