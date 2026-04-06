@@ -440,12 +440,37 @@ select * from dreams;
 1.  **הפקודה הראשונה:** השרת הריץ `echo "Dream: `. הפקודה הזו נעצרה מיד כשפגשה בנקודה-פסיק (`;`).
 2.  **הפריצה:** הלינוקס זיהה את ה-`;` כסימן לסיום פקודה, ועבר מיד לפקודה הבאה שכתבתי: `cat /home/death/death_flag.txt`.
 3.  **ההסוואה:** אחרי שהפקודה שלי רצה, הלינוקס ראה שוב `;` ואז סולמית (`#`). הסולמית אמרה לו: "כל מה שכתוב מכאן ועד סוף השורה הוא הערה, תתעלם ממנו".
-<img width="847" height="812" alt="image" src="https://github.com/user-attachments/assets/e0e8e57e-3571-430c-91d8-db4fdfc12126" />
+<img width="847" height="812" alt="image" src="https://github.com/user-attachments/assets/e0e8e57e-3571-430c-91d8-db4fdfc12126" 
+
+
+
+  
 
 
 **דגל הבא - Morpheus Flag** 
 
 
+
+
+גישה למסד הנתונים
+בטרמינל של המשתמש lucion ב-mysql שלו 
+בדקתי נתונים הבאים
+mysql> NSERT INTO `dreams` VALUES ("Hacker", "ls -la");
+mysql> INSERT INTO `dreams` VALUES ("Hacker", "&& cat /home/death/getDreams.py");
+
+
+
+<img width="1689" height="873" alt="image" src="https://github.com/user-attachments/assets/58db72f0-2dd2-4f89-9f9f-4b4ee7c6b611" />
+
+פתחתי את הקובץ python  וגילתי את השישמא למשתמש death
+
+<img width="766" height="709" alt="image" src="https://github.com/user-attachments/assets/ecc1d4b1-a0b4-4dce-a9f8-2aa6cd68506c" />
+
+
+בעזרת הסיסמה שנמצאה (lucien42DBPASSWORD), התחברתי למסד הנתונים כדי לחפש מידע נוסף על המשתמש Death.
+
+
+<img width="408" height="58" alt="image" src="https://github.com/user-attachments/assets/2e641be6-9d6c-4b0e-80bf-63f1beefb41c" />
 
 
 
